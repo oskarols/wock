@@ -13,6 +13,9 @@ namespace wock.Controllers
         {
             ViewBag.Title = "Home Page";
 
+            var windows = new Windows();
+
+
             return View();
         }
 

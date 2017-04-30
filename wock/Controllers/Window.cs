@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Runtime.InteropServices;
+using System.Text;
 using System.Web;
 
 namespace wock.Controllers
@@ -13,12 +14,12 @@ namespace wock.Controllers
         private IntPtr windowHandler;
 
         [DllImport("user32.dll", CharSet = CharSet.Unicode)]
-        private static extern int GetWindowText(IntPtr hWnd, StringBuilder strText, int maxCount);
+        public static extern int GetWindowText(IntPtr hWnd, StringBuilder strText, int maxCount);
 
         [DllImport("user32.dll", CharSet = CharSet.Unicode)]
-        private static extern int GetWindowTextLength(IntPtr hWnd);
+        public static extern int GetWindowTextLength(IntPtr hWnd);
 
         [DllImport("user32.dll")]
-        protected static extern bool IsWindowVisible(IntPtr hWnd);
+        public static extern bool IsWindowVisible(IntPtr hWnd);
     }
 }
