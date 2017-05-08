@@ -85,8 +85,9 @@ namespace ConsoleApp1
                     var isVisible = Window32.IsWindowVisible(wnd);
                     if (isVisible)
                     {
-                        var sb = new StringBuilder(256); // max class length
+
                         var className = PInvoke.User32.GetClassName(wnd);
+                        Console.WriteLine(wnd);
                         Console.WriteLine(builder.ToString());
                         Console.WriteLine(String.Format("ClassName: {0}\n\n", className));
                         //PInvoke.User32.MoveWindow(wnd, -100, 100, 300, 300, false);
