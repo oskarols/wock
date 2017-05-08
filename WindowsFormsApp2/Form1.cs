@@ -33,14 +33,6 @@ namespace WindowsFormsApp2
             this.screens = Screen.AllScreens;
             this.primaryScreen = Screen.PrimaryScreen;
 
-            // VS
-            gotoVisualStudio.KeyPressed +=
-                new EventHandler<KeyPressedEventArgs>(hook_visualstudio_KeyPressed);
-            // register the control + alt + F12 combination as hot key.
-            gotoVisualStudio.RegisterHotKey(
-                wock.Models.ModifierKeys.Control | wock.Models.ModifierKeys.Alt,
-                Keys.D5);
-
             // NEXT SCREEN
             sendToNextScreenHook.KeyPressed +=
                 new EventHandler<KeyPressedEventArgs>(hook_nextWindow_KeyPressed);
@@ -65,6 +57,14 @@ namespace WindowsFormsApp2
                 wock.Models.ModifierKeys.Control | wock.Models.ModifierKeys.Alt,
                 Keys.D2);
 
+            // VS
+            gotoVisualStudio.KeyPressed +=
+                new EventHandler<KeyPressedEventArgs>(hook_visualstudio_KeyPressed);
+            // register the control + alt + F12 combination as hot key.
+            gotoVisualStudio.RegisterHotKey(
+                wock.Models.ModifierKeys.Control | wock.Models.ModifierKeys.Alt,
+                Keys.D3);
+
 
             /// FULLSCREEN 
             fullscreenHook.KeyPressed +=
@@ -75,86 +75,37 @@ namespace WindowsFormsApp2
                 Keys.F);
         }
 
-        public IntPtr FindWindowMatch(string searchStr)
-        {
-            IntPtr foundHwnd = IntPtr.Zero;
-            PInvoke.User32.EnumWindows((IntPtr hwnd, IntPtr param) =>
-            {
-                var windowText = PInvoke.User32.GetWindowText(hwnd);
-                var hasMatch = windowText.ToLower().Contains(searchStr.ToLower());
-                if (hasMatch)
-                {
-                    foundHwnd = hwnd;
-                    return false;
-                }
-                return true;
-            }, IntPtr.Zero);
-            return foundHwnd;
-        }
-
-        public List<IntPtr> FindWindowsMatch(string searchStr)
-        {
-            var foundHwnds = new List<IntPtr>();
-            PInvoke.User32.EnumWindows((IntPtr hwnd, IntPtr param) =>
-            {
-                var windowText = PInvoke.User32.GetWindowText(hwnd);
-                var hasMatch = windowText.ToLower().Contains(searchStr.ToLower());
-                if (hasMatch)
-                {
-                    foundHwnds.Add(hwnd);
-                }
-                return true;
-            }, IntPtr.Zero);
-
-            return foundHwnds;
-        }
-
-        public bool saveCurrentState ()
-        {
-            var hwnd = PInvoke.User32.GetForegroundWindow();
-            //var className = PInvoke.User32.GetClassName(hwnd);
-            //if (className == null) { return false; };
-
-            // TODO: pretty up the transformations
-            var rawCursorPoint = PInvoke.User32.GetCursorPos();
-            var cursorPoint = new Point(rawCursorPoint.x, rawCursorPoint.y);
-            
-            this.windowCursorPositions[hwnd] = cursorPoint;
-
-            return true;
-        }
-
-        public void restoreState (IntPtr hwnd)
-        {
-            //var className = PInvoke.User32.GetClassName(hwnd);
-            //if (className == null) { return; };
-            if(this.windowCursorPositions.ContainsKey(hwnd))
-            {
-                var cursorPoint = this.windowCursorPositions[hwnd];
-                PInvoke.User32.SetCursorPos(cursorPoint.X, cursorPoint.Y);
-            }
-        }
 
         public void hook_fullscreen_KeyPressed(object sender, KeyPressedEventArgs e)
         {
             var hwnd = PInvoke.User32.GetForegroundWindow();
-            if (hwnd != null)
-            {
-                var currentScreen = Screen.FromHandle(hwnd);
-                // use WorkingArea since it will not include the task bar
-                PInvoke.User32.SetWindowPos(
-                    hwnd, 
-                    IntPtr.Zero, 
-                    currentScreen.WorkingArea.X, currentScreen.WorkingArea.Y, 
-                    currentScreen.WorkingArea.Width, currentScreen.WorkingArea.Height, 
-                0);
-            }
+            if (hwnd == null) { return; }
+
+            var currentScreen = Screen.FromHandle(hwnd);
+            // use WorkingArea since it will not include the task bar
+            PInvoke.User32.SetWindowPos(
+                hwnd, 
+                IntPtr.Zero, 
+                currentScreen.WorkingArea.X, currentScreen.WorkingArea.Y, 
+                currentScreen.WorkingArea.Width, currentScreen.WorkingArea.Height, 
+                0
+            );
         }
 
         public void hook_visualstudio_KeyPressed(object sender, KeyPressedEventArgs e)
         {
             this.saveCurrentState();
             var hwnd = FindWindowMatch("Microsoft Visual Studio");
+            PInvoke.User32.ShowWindow(hwnd, PInvoke.User32.WindowShowStyle.SW_MAXIMIZE);
+            this.restoreState(hwnd);
+            // get current window
+            PInvoke.User32.SetForegroundWindow(hwnd);
+        }
+
+        public void hook_gotoCmder_KeyPressed(object sender, KeyPressedEventArgs e)
+        {
+            this.saveCurrentState();
+            var hwnd = PInvoke.User32.FindWindow(null, "Cmder");
             PInvoke.User32.ShowWindow(hwnd, PInvoke.User32.WindowShowStyle.SW_MAXIMIZE);
             this.restoreState(hwnd);
             // get current window
@@ -174,8 +125,6 @@ namespace WindowsFormsApp2
             PInvoke.User32.ShowWindow(hwnd, PInvoke.User32.WindowShowStyle.SW_SHOW);
             this.restoreState(hwnd);
 
-            // TODO:
-            // Ensure that the cursor is within that window, else move it to center
             this.EnsureCursorWithinWindow(hwnd);
 
             // get current window
@@ -217,16 +166,6 @@ namespace WindowsFormsApp2
             );
         }
 
-        public void hook_gotoCmder_KeyPressed(object sender, KeyPressedEventArgs e)
-        {
-            this.saveCurrentState();
-            var hwnd = PInvoke.User32.FindWindow(null, "Cmder");
-            PInvoke.User32.ShowWindow(hwnd, PInvoke.User32.WindowShowStyle.SW_MAXIMIZE);
-            this.restoreState(hwnd);
-            // get current window
-            PInvoke.User32.SetForegroundWindow(hwnd);
-        }
-
         public void hook_nextWindow_KeyPressed(object sender, KeyPressedEventArgs e)
         {
             // bail if only single screen since no point
@@ -256,12 +195,14 @@ namespace WindowsFormsApp2
                     nextWindow.WorkingArea.Height, 
                     0
                 );
+                EnsureCursorWithinWindow(hwnd);
             }
         }
 
 
         /// UTILS
 
+        // TODO: clean up cycling, split into separate method
         public IntPtr getHWNDForApplication(string APP_NAME)
         {
             var currenthwnd = PInvoke.User32.GetForegroundWindow();
@@ -293,6 +234,67 @@ namespace WindowsFormsApp2
             }
             return hwnd;
         }
+
+        public IntPtr FindWindowMatch(string searchStr)
+        {
+            IntPtr foundHwnd = IntPtr.Zero;
+            PInvoke.User32.EnumWindows((IntPtr hwnd, IntPtr param) =>
+            {
+                var windowText = PInvoke.User32.GetWindowText(hwnd);
+                var hasMatch = windowText.ToLower().Contains(searchStr.ToLower());
+                if (hasMatch)
+                {
+                    foundHwnd = hwnd;
+                    return false;
+                }
+                return true;
+            }, IntPtr.Zero);
+            return foundHwnd;
+        }
+
+        public List<IntPtr> FindWindowsMatch(string searchStr)
+        {
+            var foundHwnds = new List<IntPtr>();
+            PInvoke.User32.EnumWindows((IntPtr hwnd, IntPtr param) =>
+            {
+                var windowText = PInvoke.User32.GetWindowText(hwnd);
+                var hasMatch = windowText.ToLower().Contains(searchStr.ToLower());
+                if (hasMatch)
+                {
+                    foundHwnds.Add(hwnd);
+                }
+                return true;
+            }, IntPtr.Zero);
+
+            return foundHwnds;
+        }
+
+        public bool saveCurrentState()
+        {
+            var hwnd = PInvoke.User32.GetForegroundWindow();
+            //var className = PInvoke.User32.GetClassName(hwnd);
+            //if (className == null) { return false; };
+
+            // TODO: pretty up the transformations
+            var rawCursorPoint = PInvoke.User32.GetCursorPos();
+            var cursorPoint = new Point(rawCursorPoint.x, rawCursorPoint.y);
+
+            this.windowCursorPositions[hwnd] = cursorPoint;
+
+            return true;
+        }
+
+        public void restoreState(IntPtr hwnd)
+        {
+            //var className = PInvoke.User32.GetClassName(hwnd);
+            //if (className == null) { return; };
+            if (this.windowCursorPositions.ContainsKey(hwnd))
+            {
+                var cursorPoint = this.windowCursorPositions[hwnd];
+                PInvoke.User32.SetCursorPos(cursorPoint.X, cursorPoint.Y);
+            }
+        }
+
 
         private void Form1_Load(object sender, EventArgs e)
         {
