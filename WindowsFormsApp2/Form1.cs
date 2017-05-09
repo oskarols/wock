@@ -47,7 +47,7 @@ namespace WindowsFormsApp2
             // register the control + alt + F12 combination as hot key.
             gotoChrome.RegisterHotKey(
                 wock.Models.ModifierKeys.Control | wock.Models.ModifierKeys.Alt,
-                Keys.D1);
+                Keys.D3);
 
             // CMDER
             gotoCmder.KeyPressed +=
@@ -63,8 +63,15 @@ namespace WindowsFormsApp2
             // register the control + alt + F12 combination as hot key.
             gotoVisualStudio.RegisterHotKey(
                 wock.Models.ModifierKeys.Control | wock.Models.ModifierKeys.Alt,
-                Keys.D3);
+                Keys.D4);
 
+            // VSC
+            gotoVisualStudioCode.KeyPressed +=
+                new EventHandler<KeyPressedEventArgs>(hook_gotoVisualStudioCode_KeyPressed);
+            // register the control + alt + F12 combination as hot key.
+            gotoVisualStudioCode.RegisterHotKey(
+                wock.Models.ModifierKeys.Control | wock.Models.ModifierKeys.Alt,
+                Keys.D1);
 
             /// FULLSCREEN 
             fullscreenHook.KeyPressed +=
@@ -104,10 +111,19 @@ namespace WindowsFormsApp2
 
         public void hook_gotoCmder_KeyPressed(object sender, KeyPressedEventArgs e)
         {
-            this.saveCurrentState();
-            var hwnd = PInvoke.User32.FindWindow(null, "Cmder");
-            PInvoke.User32.ShowWindow(hwnd, PInvoke.User32.WindowShowStyle.SW_MAXIMIZE);
+            this.saveCurrentState(); // todo: this has to be _before_ getHWNDForApp..
+            // why is that?
+
+            var hwnd = GetHwndForApplication("cmd");
+            // TODO:
+            // start process if not running
+
+            // maximize if minimized
+            PInvoke.User32.ShowWindow(hwnd, PInvoke.User32.WindowShowStyle.SW_SHOW);
             this.restoreState(hwnd);
+
+            this.EnsureCursorWithinWindow(hwnd);
+
             // get current window
             PInvoke.User32.SetForegroundWindow(hwnd);
         }
@@ -117,10 +133,29 @@ namespace WindowsFormsApp2
             this.saveCurrentState(); // todo: this has to be _before_ getHWNDForApp..
             // why is that?
 
-            var hwnd = getHWNDForApplication("Google Chrome");
+            var hwnd = GetHwndForApplication("Google Chrome");
             // TODO:
             // start process if not running
             
+            // maximize if minimized
+            PInvoke.User32.ShowWindow(hwnd, PInvoke.User32.WindowShowStyle.SW_SHOW);
+            this.restoreState(hwnd);
+
+            this.EnsureCursorWithinWindow(hwnd);
+
+            // get current window
+            PInvoke.User32.SetForegroundWindow(hwnd);
+        }
+
+        public void hook_gotoVisualStudioCode_KeyPressed(object sender, KeyPressedEventArgs e)
+        {
+            this.saveCurrentState(); // todo: this has to be _before_ getHWNDForApp..
+            // why is that?
+
+            var hwnd = GetHwndForApplication("Visual Studio Code");
+            // TODO:
+            // start process if not running
+
             // maximize if minimized
             PInvoke.User32.ShowWindow(hwnd, PInvoke.User32.WindowShowStyle.SW_SHOW);
             this.restoreState(hwnd);
@@ -203,7 +238,7 @@ namespace WindowsFormsApp2
         /// UTILS
 
         // TODO: clean up cycling, split into separate method
-        public IntPtr getHWNDForApplication(string APP_NAME)
+        public IntPtr GetHwndForApplication(string APP_NAME)
         {
             var currenthwnd = PInvoke.User32.GetForegroundWindow();
             var hwndWindowText = PInvoke.User32.GetWindowText(currenthwnd);
@@ -222,10 +257,7 @@ namespace WindowsFormsApp2
                     {
                         return relatedWindows[0];
                     }
-                    else
-                    {
-                        return relatedWindows[index + 1];
-                    }
+                    return relatedWindows[index + 1];
                 }
             }
             else
@@ -240,12 +272,17 @@ namespace WindowsFormsApp2
             IntPtr foundHwnd = IntPtr.Zero;
             PInvoke.User32.EnumWindows((IntPtr hwnd, IntPtr param) =>
             {
-                var windowText = PInvoke.User32.GetWindowText(hwnd);
-                var hasMatch = windowText.ToLower().Contains(searchStr.ToLower());
-                if (hasMatch)
+                var windowTextLength = PInvoke.User32.GetWindowTextLength(hwnd);
+                var isVisible = PInvoke.User32.IsWindowVisible(hwnd);
+                if (windowTextLength > 0 && isVisible)
                 {
-                    foundHwnd = hwnd;
-                    return false;
+                    var windowText = PInvoke.User32.GetWindowText(hwnd);
+                    var hasMatch = windowText.ToLower().Contains(searchStr.ToLower());
+                    if (hasMatch)
+                    {
+                        foundHwnd = hwnd;
+                        return false;
+                    }
                 }
                 return true;
             }, IntPtr.Zero);
@@ -257,12 +294,18 @@ namespace WindowsFormsApp2
             var foundHwnds = new List<IntPtr>();
             PInvoke.User32.EnumWindows((IntPtr hwnd, IntPtr param) =>
             {
-                var windowText = PInvoke.User32.GetWindowText(hwnd);
-                var hasMatch = windowText.ToLower().Contains(searchStr.ToLower());
-                if (hasMatch)
+                var windowTextLength = PInvoke.User32.GetWindowTextLength(hwnd);
+                var isVisible = PInvoke.User32.IsWindowVisible(hwnd);
+                if (windowTextLength > 0 && isVisible)
                 {
-                    foundHwnds.Add(hwnd);
+                    var windowText = PInvoke.User32.GetWindowText(hwnd);
+                    var hasMatch = windowText.ToLower().Contains(searchStr.ToLower());
+                    if (hasMatch)
+                    {
+                        foundHwnds.Add(hwnd);
+                    }
                 }
+
                 return true;
             }, IntPtr.Zero);
 
