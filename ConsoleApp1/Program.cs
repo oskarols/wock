@@ -17,6 +17,8 @@ namespace ConsoleApp1
     {
         static void Main(string[] args)
         {
+
+            Console.SetBufferSize(Console.BufferHeight, 2000);
             var point = wock.Controllers.Cursor.GetCursorPosition();
             Console.WriteLine("X: {0}, Y: {1}", point.X, point.Y);
 
@@ -83,15 +85,17 @@ namespace ConsoleApp1
                     var builder = new StringBuilder(size + 1); // why + 1?
                     Window32.GetWindowText(wnd, builder, builder.Capacity); // wut?
                     var isVisible = Window32.IsWindowVisible(wnd);
-                    if (isVisible)
-                    {
 
-                        var className = PInvoke.User32.GetClassName(wnd);
-                        Console.WriteLine(wnd);
-                        Console.WriteLine(builder.ToString());
-                        Console.WriteLine(String.Format("ClassName: {0}\n\n", className));
-                        //PInvoke.User32.MoveWindow(wnd, -100, 100, 300, 300, false);
-                    }
+                    //var searchStr = "cmd";
+                    //var windowText = PInvoke.User32.GetWindowText(wnd);
+                    //var hasMatch = windowText.ToLower().Contains(searchStr.ToLower());
+                    //if (!hasMatch) return true;
+
+                    var className = PInvoke.User32.GetClassName(wnd);
+                    Console.WriteLine(wnd);
+                    Console.WriteLine(builder.ToString());
+                    Console.WriteLine(String.Format("ClassName: {0}\n\n", className));
+                    //PInvoke.User32.MoveWindow(wnd, -100, 100, 300, 300, false);
                 }
                 return true;
 

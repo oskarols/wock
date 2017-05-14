@@ -24,6 +24,8 @@ namespace WindowsFormsApp2
             var hwndWindowText = PInvoke.User32.GetWindowText(currenthwnd);
             IntPtr hwnd = IntPtr.Zero;
 
+            // if last pressed was the same "type" as the one being toggled to
+            // we should cycle to another window of the same type.
             if (hwndWindowText.ToLower().Contains(APP_NAME.ToLower()))
             {
                 this.lastActivatedHwndForWindow[APP_NAME] = currenthwnd;
@@ -54,7 +56,7 @@ namespace WindowsFormsApp2
             {
                 var windowTextLength = PInvoke.User32.GetWindowTextLength(hwnd);
                 var isVisible = PInvoke.User32.IsWindowVisible(hwnd);
-                if (windowTextLength > 0 && isVisible)
+                if (windowTextLength > 0)
                 {
                     var windowText = PInvoke.User32.GetWindowText(hwnd);
                     var hasMatch = windowText.ToLower().Contains(searchStr.ToLower());
@@ -66,6 +68,7 @@ namespace WindowsFormsApp2
                 }
                 return true;
             }, IntPtr.Zero);
+
             return foundHwnd;
         }
 
@@ -76,7 +79,7 @@ namespace WindowsFormsApp2
             {
                 var windowTextLength = PInvoke.User32.GetWindowTextLength(hwnd);
                 var isVisible = PInvoke.User32.IsWindowVisible(hwnd);
-                if (windowTextLength > 0 && isVisible)
+                if (windowTextLength > 0)
                 {
                     var windowText = PInvoke.User32.GetWindowText(hwnd);
                     var hasMatch = windowText.ToLower().Contains(searchStr.ToLower());

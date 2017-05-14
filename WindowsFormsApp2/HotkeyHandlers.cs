@@ -27,7 +27,7 @@ namespace WindowsFormsApp2
 
         public void hook_gotoCmder_KeyPressed(object sender, KeyPressedEventArgs e)
         {
-            genericApplicationToggler("cmd");
+            genericApplicationToggler("cmder");
         }
 
         public void hook_gotoChrome_KeyPressed(object sender, KeyPressedEventArgs e)
@@ -40,6 +40,9 @@ namespace WindowsFormsApp2
             genericApplicationToggler("Visual Studio Code");
         }
 
+        // TODO
+        // Problem: if window is minimized, it won't be shown due to find method
+        // having to skip windows that are not visible (see issues with Cmder)
         public void genericApplicationToggler(string APP_NAME)
         {
             utils.saveCurrentState(); // todo: this has to be _before_ getHWNDForApp..
@@ -49,8 +52,12 @@ namespace WindowsFormsApp2
             // TODO:
             // start process if not running
 
+            if (hwnd == IntPtr.Zero) return;
+
             // maximize if minimized
-            PInvoke.User32.ShowWindow(hwnd, PInvoke.User32.WindowShowStyle.SW_SHOW);
+            
+            // TODO: what are the enum values doing here? is there a better choice of method?
+            PInvoke.User32.ShowWindow(hwnd, PInvoke.User32.WindowShowStyle.SW_SHOWNORMAL);
             utils.restoreState(hwnd);
 
             utils.EnsureCursorWithinWindow(hwnd);
