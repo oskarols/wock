@@ -27,6 +27,9 @@ namespace WindowsFormsApp2
 
             var handlers = new HotkeyHandlers();
 
+
+            // TODO: ctrl + alt + numbers clashes with e.g. dollarsign
+
             // VSC
             gotoVisualStudioCode.KeyPressed +=
                 new EventHandler<KeyPressedEventArgs>(handlers.hook_gotoVisualStudioCode_KeyPressed);

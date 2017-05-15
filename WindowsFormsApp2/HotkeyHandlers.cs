@@ -27,7 +27,7 @@ namespace WindowsFormsApp2
 
         public void hook_gotoCmder_KeyPressed(object sender, KeyPressedEventArgs e)
         {
-            genericApplicationToggler("cmder");
+            genericApplicationToggler("cmd");
         }
 
         public void hook_gotoChrome_KeyPressed(object sender, KeyPressedEventArgs e)
@@ -57,6 +57,7 @@ namespace WindowsFormsApp2
             // maximize if minimized
             
             // TODO: what are the enum values doing here? is there a better choice of method?
+            // TODO: This has bugs that make the windows smaller in some cases
             PInvoke.User32.ShowWindow(hwnd, PInvoke.User32.WindowShowStyle.SW_SHOWNORMAL);
             utils.restoreState(hwnd);
 
