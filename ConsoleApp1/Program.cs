@@ -92,17 +92,21 @@ namespace ConsoleApp1
                     //if (!hasMatch) return true;
 
                     var className = PInvoke.User32.GetClassName(wnd);
+                    PInvoke.User32.GetWindowThreadProcessId(wnd, out int processID);
+                    var process = System.Diagnostics.Process.GetProcessById(processID);
+
+
+                    // Console.WriteLine(process.MainModule.FileName);
                     Console.WriteLine(wnd);
                     Console.WriteLine(builder.ToString());
                     Console.WriteLine(String.Format("ClassName: {0}\n\n", className));
                     //PInvoke.User32.MoveWindow(wnd, -100, 100, 300, 300, false);
+                    Console.WriteLine($"Visible: ${isVisible}");
                 }
                 return true;
 
             }, IntPtr.Zero); // wtf does this do?
         }
-
-
 
         [OperationContract(IsOneWay = true)]
         void NormalFunction() {
