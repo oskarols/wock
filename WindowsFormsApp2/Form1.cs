@@ -22,10 +22,14 @@ namespace WindowsFormsApp2
 
             // TODO: find better alternative..
             // as unique as possible, to not clash with other key combos
-            var hyperKey = wock.Models.ModifierKeys.Control | wock.Models.ModifierKeys.Alt | wock.Models.ModifierKeys.Shift | wock.Models.ModifierKeys.Win;
-            
+            var hyperKey = 
+                wock.Models.ModifierKeys.Control | 
+                wock.Models.ModifierKeys.Alt | 
+                wock.Models.ModifierKeys.Shift | 
+                wock.Models.ModifierKeys.Win;
+
             // VSC
-            gotoVisualStudioCode.KeyPressed +=
+            gotoVisualStudioCode.KeyPressed += 
                 new EventHandler<KeyPressedEventArgs>(handlers.hook_gotoVisualStudioCode_KeyPressed);
             // register the control + alt + F12 combination as hot key.
             gotoVisualStudioCode.RegisterHotKey(hyperKey, Keys.D1);
