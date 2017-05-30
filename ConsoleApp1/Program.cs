@@ -94,14 +94,21 @@ namespace ConsoleApp1
                     var className = PInvoke.User32.GetClassName(wnd);
                     PInvoke.User32.GetWindowThreadProcessId(wnd, out int processID);
                     var process = System.Diagnostics.Process.GetProcessById(processID);
+                    var chromeFileName = "cmder.exe";
+                    var fileName = process.MainModule.FileName;
+
+                    //if (fileName.ToLower().Contains(chromeFileName))
+                    //{
+                        //Console.WriteLine($"PID: {processID}");
+                        Console.WriteLine(fileName);
+                        //Console.WriteLine(wnd);
+                        //Console.WriteLine(builder.ToString());
+                        //Console.WriteLine(String.Format("ClassName: {0}", className));
+                        //PInvoke.User32.MoveWindow(wnd, -100, 100, 300, 300, false);
+                        //Console.WriteLine($"Visible: {isVisible}\n");
+                    //}
 
 
-                    // Console.WriteLine(process.MainModule.FileName);
-                    Console.WriteLine(wnd);
-                    Console.WriteLine(builder.ToString());
-                    Console.WriteLine(String.Format("ClassName: {0}\n\n", className));
-                    //PInvoke.User32.MoveWindow(wnd, -100, 100, 300, 300, false);
-                    Console.WriteLine($"Visible: ${isVisible}");
                 }
                 return true;
 

@@ -22,33 +22,33 @@ namespace WindowsFormsApp2
 
         public void hook_visualstudio_KeyPressed(object sender, KeyPressedEventArgs e)
         {
-            genericApplicationToggler("Microsoft Visual Studio");
+            genericApplicationToggler("devenv.exe");
         }
 
         public void hook_gotoCmder_KeyPressed(object sender, KeyPressedEventArgs e)
         {
-            genericApplicationToggler("cmd");
+            genericApplicationToggler("ConEmu");
         }
 
         public void hook_gotoChrome_KeyPressed(object sender, KeyPressedEventArgs e)
         {
-            genericApplicationToggler("Google Chrome");
+            genericApplicationToggler("chrome.exe");
         }
 
         public void hook_gotoVisualStudioCode_KeyPressed(object sender, KeyPressedEventArgs e)
         {
-            genericApplicationToggler("Visual Studio Code");
+            genericApplicationToggler("code.exe");
         }
 
         // TODO
         // Problem: if window is minimized, it won't be shown due to find method
         // having to skip windows that are not visible (see issues with Cmder)
-        public void genericApplicationToggler(string APP_NAME)
+        public void genericApplicationToggler(string APP_FILE_NAME, string APP_NAME = null)
         {
             utils.saveCurrentState(); // todo: this has to be _before_ getHWNDForApp..
             // why is that?
 
-            var hwnd = utils.GetHwndForApplication(APP_NAME);
+            var hwnd = utils.GetHwndForApplication(APP_FILE_NAME);
             // TODO:
             // start process if not running
 

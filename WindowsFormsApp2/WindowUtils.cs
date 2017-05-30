@@ -8,6 +8,7 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Forms;
 using wock.Models;
+using System.IO;
 
 namespace WindowsFormsApp2
 {
@@ -15,21 +16,25 @@ namespace WindowsFormsApp2
     {
 
         Dictionary<IntPtr, Point> windowCursorPositions = new Dictionary<IntPtr, Point>();
+
+        // <filename, hwnd>
+        // e.g. <"code.exe", Pointer>
         Dictionary<string, IntPtr> lastActivatedHwndForWindow = new Dictionary<string, IntPtr>();
 
         // TODO: clean up cycling, split into separate method
-        public IntPtr GetHwndForApplication(string APP_NAME)
+        public IntPtr GetHwndForApplication(string APP_FILE_NAME)
         {
             var currenthwnd = PInvoke.User32.GetForegroundWindow();
             var hwndWindowText = PInvoke.User32.GetWindowText(currenthwnd);
+            var currentlyActiveApplicationFilename = this.getFilenameForHwnd(currenthwnd);
             IntPtr hwnd = IntPtr.Zero;
 
             // if last pressed was the same "type" as the one being toggled to
             // we should cycle to another window of the same type.
-            if (hwndWindowText.ToLower().Contains(APP_NAME.ToLower()))
+            if (currentlyActiveApplicationFilename.ToLower().Contains(APP_FILE_NAME.ToLower()))
             {
-                this.lastActivatedHwndForWindow[APP_NAME] = currenthwnd;
-                var relatedWindows = this.FindWindowsMatch(APP_NAME);
+                this.lastActivatedHwndForWindow[APP_FILE_NAME] = currenthwnd;
+                var relatedWindows = this.FindWindowsMatch(APP_FILE_NAME);
                 relatedWindows.Sort((x, y) => x.ToInt32().CompareTo(y.ToInt32()));
                 if (relatedWindows.Count > 1)
                 {
@@ -44,9 +49,19 @@ namespace WindowsFormsApp2
             }
             else
             {
-                return FindWindowMatch(APP_NAME);
+                return FindWindowMatch(APP_FILE_NAME);
             }
             return hwnd;
+        }
+
+        public string getFilenameForHwnd(IntPtr hwnd)
+        {
+            int processID;
+            PInvoke.User32.GetWindowThreadProcessId(hwnd, out processID);
+            var process = System.Diagnostics.Process.GetProcessById(processID);
+            var filename = process.MainModule.FileName;
+            if (filename == null) return null;
+            return Path.GetFileName(filename);
         }
 
         public IntPtr FindWindowMatch(string searchStr)
@@ -54,12 +69,14 @@ namespace WindowsFormsApp2
             IntPtr foundHwnd = IntPtr.Zero;
             PInvoke.User32.EnumWindows((IntPtr hwnd, IntPtr param) =>
             {
+                var filename = this.getFilenameForHwnd(hwnd);
                 var windowTextLength = PInvoke.User32.GetWindowTextLength(hwnd);
+                var hasWindowText = windowTextLength > 0; 
                 var isVisible = PInvoke.User32.IsWindowVisible(hwnd);
-                if (windowTextLength > 0)
+                if (filename != null && filename.Length > 0 && isVisible && hasWindowText)
                 {
-                    var windowText = PInvoke.User32.GetWindowText(hwnd);
-                    var hasMatch = windowText.ToLower().Contains(searchStr.ToLower());
+                    //var windowText = PInvoke.User32.GetWindowText(hwnd);
+                    var hasMatch = filename.ToLower().Contains(searchStr.ToLower());
                     if (hasMatch)
                     {
                         foundHwnd = hwnd;
@@ -78,11 +95,13 @@ namespace WindowsFormsApp2
             PInvoke.User32.EnumWindows((IntPtr hwnd, IntPtr param) =>
             {
                 var windowTextLength = PInvoke.User32.GetWindowTextLength(hwnd);
+                var hasWindowText = windowTextLength > 0;
+                var filename = this.getFilenameForHwnd(hwnd);
                 var isVisible = PInvoke.User32.IsWindowVisible(hwnd);
-                if (windowTextLength > 0)
+                if (filename != null && filename.Length > 0 && hasWindowText && isVisible)
                 {
-                    var windowText = PInvoke.User32.GetWindowText(hwnd);
-                    var hasMatch = windowText.ToLower().Contains(searchStr.ToLower());
+                    //var windowText = PInvoke.User32.GetWindowText(hwnd);
+                    var hasMatch = filename.ToLower().Contains(searchStr.ToLower());
                     if (hasMatch)
                     {
                         foundHwnds.Add(hwnd);
