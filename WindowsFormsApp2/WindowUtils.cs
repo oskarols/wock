@@ -59,7 +59,18 @@ namespace WindowsFormsApp2
             int processID;
             PInvoke.User32.GetWindowThreadProcessId(hwnd, out processID);
             var process = System.Diagnostics.Process.GetProcessById(processID);
-            var filename = process.MainModule.FileName;
+            string filename = null;
+
+            // Win32Exception Access Denied
+            try
+            {
+                filename = process.MainModule.FileName;
+            }
+            catch (Exception e)
+            {
+                return null;
+            }
+            
             if (filename == null) return null;
             return Path.GetFileName(filename);
         }
