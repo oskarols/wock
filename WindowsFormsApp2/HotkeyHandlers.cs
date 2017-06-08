@@ -40,6 +40,11 @@ namespace WindowsFormsApp2
             genericApplicationToggler("code.exe");
         }
 
+        public void hook_gotoExplorer_KeyPressed(object sender, KeyPressedEventArgs e)
+        {
+            genericApplicationToggler("explorer.exe");
+        }
+
         // TODO
         // Problem: if window is minimized, it won't be shown due to find method
         // having to skip windows that are not visible (see issues with Cmder)

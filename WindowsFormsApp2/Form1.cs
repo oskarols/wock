@@ -13,6 +13,7 @@ namespace WindowsFormsApp2
         KeyboardHook gotoSpotify = new KeyboardHook();
         KeyboardHook gotoCmder = new KeyboardHook();
         KeyboardHook gotoVisualStudioCode = new KeyboardHook();
+        KeyboardHook gotoExplorer = new KeyboardHook();
 
         public Form1()
         {
@@ -51,6 +52,11 @@ namespace WindowsFormsApp2
                 new EventHandler<KeyPressedEventArgs>(handlers.hook_visualstudio_KeyPressed);
             // register the control + alt + F12 combination as hot key.
             gotoVisualStudio.RegisterHotKey(hyperKey, Keys.D4);
+
+            // EXPLORER
+            gotoExplorer.KeyPressed +=
+                new EventHandler<KeyPressedEventArgs>(handlers.hook_gotoExplorer_KeyPressed);
+            gotoExplorer.RegisterHotKey(hyperKey, Keys.Z);
 
             /// FULLSCREEN 
             fullscreenHook.KeyPressed +=

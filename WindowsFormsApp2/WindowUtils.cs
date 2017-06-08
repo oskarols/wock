@@ -25,6 +25,11 @@ namespace WindowsFormsApp2
         public IntPtr GetHwndForApplication(string APP_FILE_NAME)
         {
             var currenthwnd = PInvoke.User32.GetForegroundWindow();
+
+            // when one toggles between applications too fast sometimes the hwnd
+            // sent back will be null, this guards against this
+            if (currenthwnd == IntPtr.Zero) return IntPtr.Zero;
+
             var hwndWindowText = PInvoke.User32.GetWindowText(currenthwnd);
             var currentlyActiveApplicationFilename = this.getFilenameForHwnd(currenthwnd);
             IntPtr hwnd = IntPtr.Zero;
