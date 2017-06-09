@@ -12,6 +12,13 @@ using System.IO;
 
 namespace WindowsFormsApp2
 {
+    public struct WindowInfo {
+        public string fileName;
+        public string windowText;
+        public string className;
+        public bool isVisible;
+    }
+
     public class WindowUtils
     {
 
@@ -22,41 +29,51 @@ namespace WindowsFormsApp2
         Dictionary<string, IntPtr> lastActivatedHwndForWindow = new Dictionary<string, IntPtr>();
 
         // TODO: clean up cycling, split into separate method
-        public IntPtr GetHwndForApplication(string APP_FILE_NAME)
+        public IntPtr GetHwndForApplication(
+            Func<WindowInfo, bool> applicationFinder,
+            string APP_IDENTIFIER
+        )
         {
-            var currenthwnd = PInvoke.User32.GetForegroundWindow();
+            var currentlyActiveWindow = PInvoke.User32.GetForegroundWindow();
 
             // when one toggles between applications too fast sometimes the hwnd
             // sent back will be null, this guards against this
-            if (currenthwnd == IntPtr.Zero) return IntPtr.Zero;
+            if (currentlyActiveWindow == IntPtr.Zero) return IntPtr.Zero;
 
-            var hwndWindowText = PInvoke.User32.GetWindowText(currenthwnd);
-            var currentlyActiveApplicationFilename = this.getFilenameForHwnd(currenthwnd);
-            IntPtr hwnd = IntPtr.Zero;
+            var currentlyActiveWindowInfo = getWindowInfo(currentlyActiveWindow);
 
             // if last pressed was the same "type" as the one being toggled to
             // we should cycle to another window of the same type.
-            if (currentlyActiveApplicationFilename.ToLower().Contains(APP_FILE_NAME.ToLower()))
+            if (applicationFinder(currentlyActiveWindowInfo))
             {
-                this.lastActivatedHwndForWindow[APP_FILE_NAME] = currenthwnd;
+                this.lastActivatedHwndForWindow[APP_FILE_NAME] = currentlyActiveWindow;
                 var relatedWindows = this.FindWindowsMatch(APP_FILE_NAME);
-                relatedWindows.Sort((x, y) => x.ToInt32().CompareTo(y.ToInt32()));
-                if (relatedWindows.Count > 1)
+
+                if (relatedWindows.Count < 1) return IntPtr.Zero;
+
+                var index = relatedWindows.FindIndex((ptr) => ptr == currentlyActiveWindow);
+                var isAtEndOfList = index == relatedWindows.Count - 1;
+                if (isAtEndOfList)
                 {
-                    var index = relatedWindows.FindIndex((ptr) => ptr == currenthwnd);
-                    var isAtEndOfList = index == relatedWindows.Count - 1;
-                    if (isAtEndOfList)
-                    {
-                        return relatedWindows[0];
-                    }
-                    return relatedWindows[index + 1];
+                    // If at the end, loop around to first item
+                    return relatedWindows[0];
                 }
+                // otherwise just grab the next one
+                return relatedWindows[index + 1];
             }
             else
             {
                 return FindWindowMatch(APP_FILE_NAME);
             }
-            return hwnd;
+        }
+
+        public WindowInfo getWindowInfo(IntPtr hwnd) {
+            return new WindowInfo{
+                fileName = getFilenameForHwnd(hwnd),
+                isVisible = PInvoke.User32.IsWindowVisible(hwnd),
+                className = PInvoke.User32.GetClassName(hwnd),
+                windowText = PInvoke.User32.GetWindowText(currentlyActiveWindow)
+            };
         }
 
         public string getFilenameForHwnd(IntPtr hwnd)
@@ -75,7 +92,7 @@ namespace WindowsFormsApp2
             {
                 return null;
             }
-            
+
             if (filename == null) return null;
             return Path.GetFileName(filename);
         }
@@ -87,7 +104,7 @@ namespace WindowsFormsApp2
             {
                 var filename = this.getFilenameForHwnd(hwnd);
                 var windowTextLength = PInvoke.User32.GetWindowTextLength(hwnd);
-                var hasWindowText = windowTextLength > 0; 
+                var hasWindowText = windowTextLength > 0;
                 var isVisible = PInvoke.User32.IsWindowVisible(hwnd);
                 if (filename != null && filename.Length > 0 && isVisible && hasWindowText)
                 {
@@ -126,6 +143,10 @@ namespace WindowsFormsApp2
 
                 return true;
             }, IntPtr.Zero);
+
+            // since otherwise the order is quite inconsistent
+            // and we won't be able to rely on order
+            foundHwnds.Sort((x, y) => x.ToInt32().CompareTo(y.ToInt32()));
 
             return foundHwnds;
         }

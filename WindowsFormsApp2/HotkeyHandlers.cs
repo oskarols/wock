@@ -22,46 +22,49 @@ namespace WindowsFormsApp2
 
         public void hook_visualstudio_KeyPressed(object sender, KeyPressedEventArgs e)
         {
-            genericApplicationToggler((app) => app.fileName == "devenv.exe");
+            genericApplicationToggler((app) => app.fileName == "devenv.exe", "devenv.exe");
         }
 
         public void hook_gotoCmder_KeyPressed(object sender, KeyPressedEventArgs e)
         {
             // not exe to be compatible with normal & 64 bit version
-            genericApplicationToggler("ConEmu");
+            genericApplicationToggler((app) => app.fileName == "ConEmu", "ConEmu");
         }
 
         public void hook_gotoChrome_KeyPressed(object sender, KeyPressedEventArgs e)
         {
-            genericApplicationToggler("chrome.exe");
+            genericApplicationToggler((app) => app.fileName == "chrome.exe", "chrome.exe");
         }
 
         public void hook_gotoVisualStudioCode_KeyPressed(object sender, KeyPressedEventArgs e)
         {
-            genericApplicationToggler("code.exe");
+            genericApplicationToggler((app) => app.fileName == "code.exe", "code.exe");
         }
 
         public void hook_gotoExplorer_KeyPressed(object sender, KeyPressedEventArgs e)
         {
-            genericApplicationToggler("explorer.exe");
+            genericApplicationToggler((app) => app.fileName == "explorer.exe", "explorer.exe");
         }
 
         // TODO
         // Problem: if window is minimized, it won't be shown due to find method
         // having to skip windows that are not visible (see issues with Cmder)
-        public void genericApplicationToggler(Func<object, bool> applicationFinder)
+        public void genericApplicationToggler(
+            Func<WindowInfo, bool> applicationFinder,
+            string APP_IDENTIFIER
+        )
         {
             utils.saveCurrentState(); // todo: this has to be _before_ getHWNDForApp..
             // why is that?
 
-            var hwnd = utils.GetHwndForApplication(APP_FILE_NAME);
+            var hwnd = utils.GetHwndForApplication(applicationFinder, APP_IDENTIFIER);
             // TODO:
             // start process if not running
 
             if (hwnd == IntPtr.Zero) return;
 
             // maximize if minimized
-            
+
             // TODO: what are the enum values doing here? is there a better choice of method?
             // TODO: This has bugs that make the windows smaller in some cases
             PInvoke.User32.ShowWindow(hwnd, PInvoke.User32.WindowShowStyle.SW_SHOWNORMAL);
