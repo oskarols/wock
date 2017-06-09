@@ -22,11 +22,12 @@ namespace WindowsFormsApp2
 
         public void hook_visualstudio_KeyPressed(object sender, KeyPressedEventArgs e)
         {
-            genericApplicationToggler("devenv.exe");
+            genericApplicationToggler((app) => app.fileName == "devenv.exe");
         }
 
         public void hook_gotoCmder_KeyPressed(object sender, KeyPressedEventArgs e)
         {
+            // not exe to be compatible with normal & 64 bit version
             genericApplicationToggler("ConEmu");
         }
 
@@ -48,7 +49,7 @@ namespace WindowsFormsApp2
         // TODO
         // Problem: if window is minimized, it won't be shown due to find method
         // having to skip windows that are not visible (see issues with Cmder)
-        public void genericApplicationToggler(string APP_FILE_NAME, string APP_NAME = null)
+        public void genericApplicationToggler(Func<object, bool> applicationFinder)
         {
             utils.saveCurrentState(); // todo: this has to be _before_ getHWNDForApp..
             // why is that?
