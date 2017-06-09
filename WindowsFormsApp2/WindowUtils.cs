@@ -19,9 +19,16 @@ namespace WindowsFormsApp2
         public bool isVisible;
     }
 
-    public class WindowUtils
-    {
+    public WindowInfo getWindowInfo(IntPtr hwnd) {
+        return new WindowInfo {
+            fileName = getFilenameForHwnd(hwnd),
+            isVisible = PInvoke.User32.IsWindowVisible(hwnd),
+            className = PInvoke.User32.GetClassName(hwnd),
+            windowText = PInvoke.User32.GetWindowText(currentlyActiveWindow)
+        };
+    }
 
+    public class WindowUtils {
         Dictionary<IntPtr, Point> windowCursorPositions = new Dictionary<IntPtr, Point>();
 
         // <filename, hwnd>
@@ -32,8 +39,7 @@ namespace WindowsFormsApp2
         public IntPtr GetHwndForApplication(
             Func<WindowInfo, bool> applicationFinder,
             string APP_IDENTIFIER
-        )
-        {
+        ) {
             var currentlyActiveWindow = PInvoke.User32.GetForegroundWindow();
 
             // when one toggles between applications too fast sometimes the hwnd
@@ -46,6 +52,7 @@ namespace WindowsFormsApp2
             // we should cycle to another window of the same type.
             if (applicationFinder(currentlyActiveWindowInfo))
             {
+                // TODO: Break this part out
                 this.lastActivatedHwndForWindow[APP_FILE_NAME] = currentlyActiveWindow;
                 var relatedWindows = this.FindWindowsMatch(APP_FILE_NAME);
 
@@ -65,15 +72,6 @@ namespace WindowsFormsApp2
             {
                 return FindWindowMatch(APP_FILE_NAME);
             }
-        }
-
-        public WindowInfo getWindowInfo(IntPtr hwnd) {
-            return new WindowInfo{
-                fileName = getFilenameForHwnd(hwnd),
-                isVisible = PInvoke.User32.IsWindowVisible(hwnd),
-                className = PInvoke.User32.GetClassName(hwnd),
-                windowText = PInvoke.User32.GetWindowText(currentlyActiveWindow)
-            };
         }
 
         public string getFilenameForHwnd(IntPtr hwnd)
@@ -102,6 +100,8 @@ namespace WindowsFormsApp2
             IntPtr foundHwnd = IntPtr.Zero;
             PInvoke.User32.EnumWindows((IntPtr hwnd, IntPtr param) =>
             {
+                var windowInfo = getWindowInfo(hwnd);
+
                 var filename = this.getFilenameForHwnd(hwnd);
                 var windowTextLength = PInvoke.User32.GetWindowTextLength(hwnd);
                 var hasWindowText = windowTextLength > 0;
