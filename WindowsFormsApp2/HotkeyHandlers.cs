@@ -56,6 +56,14 @@ namespace WindowsFormsApp2
             genericApplicationToggler((app) => app.fileName == "explorer.exe", "explorer.exe");
         }
 
+        public void hook_gotoSpotify_KeyPressed(object sender, KeyPressedEventArgs e)
+        {
+            genericApplicationToggler((app) => {
+                return app.fileName == "Spotify.exe" && app.className == "SpotifyMainWindow";
+            }, 
+            "Spotify");
+        }
+
         // TODO
         // Problem: if window is minimized, it won't be shown due to find method
         // having to skip windows that are not visible (see issues with Cmder)

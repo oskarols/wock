@@ -53,6 +53,12 @@ namespace WindowsFormsApp2
             // register the control + alt + F12 combination as hot key.
             gotoVisualStudio.RegisterHotKey(hyperKey, Keys.D4);
 
+            // SPOTIFY
+            gotoSpotify.KeyPressed +=
+                new EventHandler<KeyPressedEventArgs>(handlers.hook_gotoSpotify_KeyPressed);
+            // register the control + alt + F12 combination as hot key.
+            gotoSpotify.RegisterHotKey(hyperKey, Keys.D6);
+
             // EXPLORER
             gotoExplorer.KeyPressed +=
                 new EventHandler<KeyPressedEventArgs>(handlers.hook_gotoExplorer_KeyPressed);
