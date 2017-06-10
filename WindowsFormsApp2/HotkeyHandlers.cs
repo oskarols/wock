@@ -8,6 +8,7 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Forms;
 using wock.Models;
+using System.Diagnostics;
 
 namespace WindowsFormsApp2
 {
@@ -28,17 +29,26 @@ namespace WindowsFormsApp2
         public void hook_gotoCmder_KeyPressed(object sender, KeyPressedEventArgs e)
         {
             // not exe to be compatible with normal & 64 bit version
-            genericApplicationToggler((app) => app.fileName == "ConEmu", "ConEmu");
+            genericApplicationToggler((app) => {
+                return app.fileName != null && app.fileName.Contains("ConEmu");
+            }, "ConEmu");
         }
 
         public void hook_gotoChrome_KeyPressed(object sender, KeyPressedEventArgs e)
         {
-            genericApplicationToggler((app) => app.fileName == "chrome.exe", "chrome.exe");
+            genericApplicationToggler((app) =>
+            {
+                Debug.WriteLine(app.fileName);
+                var hasMatch = app.fileName != null && app.fileName.ToLower() == "chrome.exe";
+                return hasMatch;
+            }
+                , 
+                "chrome.exe");
         }
 
         public void hook_gotoVisualStudioCode_KeyPressed(object sender, KeyPressedEventArgs e)
         {
-            genericApplicationToggler((app) => app.fileName == "code.exe", "code.exe");
+            genericApplicationToggler((app) => app.fileName == "Code.exe", "code.exe");
         }
 
         public void hook_gotoExplorer_KeyPressed(object sender, KeyPressedEventArgs e)

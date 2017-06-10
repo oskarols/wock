@@ -19,14 +19,7 @@ namespace WindowsFormsApp2
         public bool isVisible;
     }
 
-    public WindowInfo getWindowInfo(IntPtr hwnd) {
-        return new WindowInfo {
-            fileName = getFilenameForHwnd(hwnd),
-            isVisible = PInvoke.User32.IsWindowVisible(hwnd),
-            className = PInvoke.User32.GetClassName(hwnd),
-            windowText = PInvoke.User32.GetWindowText(currentlyActiveWindow)
-        };
-    }
+
 
     public class WindowUtils {
         Dictionary<IntPtr, Point> windowCursorPositions = new Dictionary<IntPtr, Point>();
@@ -34,6 +27,47 @@ namespace WindowsFormsApp2
         // <filename, hwnd>
         // e.g. <"code.exe", Pointer>
         Dictionary<string, IntPtr> lastActivatedHwndForWindow = new Dictionary<string, IntPtr>();
+
+        public WindowInfo GetWindowInfo(IntPtr hwnd)
+        {
+            return new WindowInfo
+            {
+                fileName = getFilenameForHwnd(hwnd),
+                isVisible = PInvoke.User32.IsWindowVisible(hwnd),
+                className = PInvoke.User32.GetClassName(hwnd),
+                windowText = PInvoke.User32.GetWindowText(hwnd)
+            };
+        }
+
+        /// <summary>
+        /// Version of GetWindowInfo where we try to minimize Win32 Exceptions
+        /// by skipping PInvoke operations if the hwnd looks sketchy
+        /// </summary>
+        /// <param name="hwnd"></param>
+        /// <returns></returns>
+        public WindowInfo SafeGetWindowInfo(IntPtr hwnd)
+        {
+            var windowInfo = new WindowInfo();
+
+            windowInfo.isVisible = PInvoke.User32.IsWindowVisible(hwnd);
+            // Assume that windows that set isVisible to false are not what
+            // we're looking for
+            if (windowInfo.isVisible == false) return windowInfo;
+
+            windowInfo.className = PInvoke.User32.GetClassName(hwnd);
+            // Assume that without a className its some weird internal
+            // window used by the OS
+            if (windowInfo.className.Length == 0) return windowInfo;
+
+            windowInfo.fileName = getFilenameForHwnd(hwnd);
+
+            var windowTextLength = PInvoke.User32.GetWindowTextLength(hwnd);
+            if (windowTextLength <= 0) return windowInfo;
+
+            // Win32 Exception "Handle is Invalid" when using e.g. "Explorer.EXE"
+            windowInfo.windowText = PInvoke.User32.GetWindowText(hwnd);
+            return windowInfo;
+        }
 
         // TODO: clean up cycling, split into separate method
         public IntPtr GetHwndForApplication(
@@ -46,15 +80,15 @@ namespace WindowsFormsApp2
             // sent back will be null, this guards against this
             if (currentlyActiveWindow == IntPtr.Zero) return IntPtr.Zero;
 
-            var currentlyActiveWindowInfo = getWindowInfo(currentlyActiveWindow);
+            var currentlyActiveWindowInfo = GetWindowInfo(currentlyActiveWindow);
 
             // if last pressed was the same "type" as the one being toggled to
             // we should cycle to another window of the same type.
             if (applicationFinder(currentlyActiveWindowInfo))
             {
                 // TODO: Break this part out
-                this.lastActivatedHwndForWindow[APP_FILE_NAME] = currentlyActiveWindow;
-                var relatedWindows = this.FindWindowsMatch(APP_FILE_NAME);
+                this.lastActivatedHwndForWindow[APP_IDENTIFIER] = currentlyActiveWindow;
+                var relatedWindows = this.FindWindowsMatch(applicationFinder);
 
                 if (relatedWindows.Count < 1) return IntPtr.Zero;
 
@@ -70,7 +104,7 @@ namespace WindowsFormsApp2
             }
             else
             {
-                return FindWindowMatch(APP_FILE_NAME);
+                return FindWindowMatch(applicationFinder);
             }
         }
 
@@ -95,26 +129,17 @@ namespace WindowsFormsApp2
             return Path.GetFileName(filename);
         }
 
-        public IntPtr FindWindowMatch(string searchStr)
+        public IntPtr FindWindowMatch(Func<WindowInfo, bool> applicationFinder)
         {
             IntPtr foundHwnd = IntPtr.Zero;
             PInvoke.User32.EnumWindows((IntPtr hwnd, IntPtr param) =>
             {
-                var windowInfo = getWindowInfo(hwnd);
+                var windowInfo = SafeGetWindowInfo(hwnd);
 
-                var filename = this.getFilenameForHwnd(hwnd);
-                var windowTextLength = PInvoke.User32.GetWindowTextLength(hwnd);
-                var hasWindowText = windowTextLength > 0;
-                var isVisible = PInvoke.User32.IsWindowVisible(hwnd);
-                if (filename != null && filename.Length > 0 && isVisible && hasWindowText)
+                if (applicationFinder(windowInfo))
                 {
-                    //var windowText = PInvoke.User32.GetWindowText(hwnd);
-                    var hasMatch = filename.ToLower().Contains(searchStr.ToLower());
-                    if (hasMatch)
-                    {
-                        foundHwnd = hwnd;
-                        return false;
-                    }
+                    foundHwnd = hwnd;
+                    return false;
                 }
                 return true;
             }, IntPtr.Zero);
@@ -122,25 +147,17 @@ namespace WindowsFormsApp2
             return foundHwnd;
         }
 
-        public List<IntPtr> FindWindowsMatch(string searchStr)
+        public List<IntPtr> FindWindowsMatch(Func<WindowInfo, bool> applicationFinder)
         {
             var foundHwnds = new List<IntPtr>();
             PInvoke.User32.EnumWindows((IntPtr hwnd, IntPtr param) =>
             {
-                var windowTextLength = PInvoke.User32.GetWindowTextLength(hwnd);
-                var hasWindowText = windowTextLength > 0;
-                var filename = this.getFilenameForHwnd(hwnd);
-                var isVisible = PInvoke.User32.IsWindowVisible(hwnd);
-                if (filename != null && filename.Length > 0 && hasWindowText && isVisible)
-                {
-                    //var windowText = PInvoke.User32.GetWindowText(hwnd);
-                    var hasMatch = filename.ToLower().Contains(searchStr.ToLower());
-                    if (hasMatch)
-                    {
-                        foundHwnds.Add(hwnd);
-                    }
-                }
+                var windowInfo = SafeGetWindowInfo(hwnd);
 
+                if (applicationFinder(windowInfo))
+                {
+                    foundHwnds.Add(hwnd);
+                }
                 return true;
             }, IntPtr.Zero);
 
