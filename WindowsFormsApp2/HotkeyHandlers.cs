@@ -23,7 +23,13 @@ namespace WindowsFormsApp2
 
         public void hook_visualstudio_KeyPressed(object sender, KeyPressedEventArgs e)
         {
-            genericApplicationToggler((app) => app.fileName == "devenv.exe", "devenv.exe");
+            genericApplicationToggler((app) =>
+            {
+                return app.fileName == "devenv.exe" && 
+                // need to do this since Visual Studio has lots of small windows
+                // that have no windowText (which we're not interested in)
+                app.windowText != null;
+            }, "devenv");
         }
 
         public void hook_gotoCmder_KeyPressed(object sender, KeyPressedEventArgs e)
@@ -53,7 +59,13 @@ namespace WindowsFormsApp2
 
         public void hook_gotoExplorer_KeyPressed(object sender, KeyPressedEventArgs e)
         {
-            genericApplicationToggler((app) => app.fileName == "explorer.exe", "explorer.exe");
+            genericApplicationToggler((app) => {
+                return app.fileName != null && 
+                    app.fileName.ToLower() == "explorer.exe" &&
+                    // otherwise jumps to e.g. the startmenu and tray as well
+                    // RE ExplorerWClass: https://blogs.msdn.microsoft.com/oldnewthing/20150619-00/?p=45341
+                    (app.className == "CabinetWClass" || app.className == "Explorer­WClass");
+            }, "explorer");
         }
 
         public void hook_gotoSpotify_KeyPressed(object sender, KeyPressedEventArgs e)
