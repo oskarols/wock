@@ -47,14 +47,17 @@ namespace WindowsFormsApp2
                 Debug.WriteLine(app.fileName);
                 var hasMatch = app.fileName != null && app.fileName.ToLower() == "chrome.exe";
                 return hasMatch;
-            }
-                , 
-                "chrome.exe");
+            }, 
+            "chrome.exe",
+            @"C:\Program Files(x86)\Google\Chrome\Application\chrome.exe"
+            );
         }
 
         public void hook_gotoVisualStudioCode_KeyPressed(object sender, KeyPressedEventArgs e)
         {
-            genericApplicationToggler((app) => app.fileName == "Code.exe", "code.exe");
+            genericApplicationToggler((app) => app.fileName == "Code.exe", 
+                "code.exe",
+                @"C:\Program Files (x86)\Microsoft VS Code\Code.exe");
         }
 
         public void hook_gotoExplorer_KeyPressed(object sender, KeyPressedEventArgs e)
@@ -81,7 +84,8 @@ namespace WindowsFormsApp2
         // having to skip windows that are not visible (see issues with Cmder)
         public void genericApplicationToggler(
             Func<WindowInfo, bool> applicationFinder,
-            string APP_IDENTIFIER
+            string APP_IDENTIFIER,
+            string APP_FILE_PATH = null
         )
         {
             utils.saveCurrentState(); // todo: this has to be _before_ getHWNDForApp..
@@ -91,7 +95,13 @@ namespace WindowsFormsApp2
             // TODO:
             // start process if not running
 
-            if (hwnd == IntPtr.Zero) return;
+            if (hwnd == IntPtr.Zero)
+            {
+                if (APP_FILE_PATH == null) return;
+                else {
+                    ApplicationUtils.StartApplication(APP_FILE_PATH);
+                }
+            }
 
             // maximize if minimized
 
