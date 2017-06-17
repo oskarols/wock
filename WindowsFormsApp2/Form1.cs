@@ -78,9 +78,34 @@ namespace WindowsFormsApp2
 
         }
 
+        private NotifyIcon trayIcon;
+
+        protected override void OnLoad(EventArgs e)
+        {
+            // need to set both Visible & ShowInTaskbar to hide it
+            Visible = false;
+            ShowInTaskbar = false;
+            base.OnLoad(e);
+        }
+
         private void Form1_Load(object sender, EventArgs e)
         {
+            trayIcon = new NotifyIcon()
+            {
+                Icon = Resource1.Icon1,
+                ContextMenu = new ContextMenu(new MenuItem[]
+                {
+                        new MenuItem("Exit", Exit)
+                }),
+                Visible = true
+            };
+            this.Visible = false;
+        }
 
+        void Exit(object sender, EventArgs e)
+        {
+            trayIcon.Visible = false;
+            Application.Exit();
         }
     }
 }
