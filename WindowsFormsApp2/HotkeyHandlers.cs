@@ -79,9 +79,6 @@ namespace WindowsFormsApp2
             "Spotify");
         }
 
-        // TODO
-        // Problem: if window is minimized, it won't be shown due to find method
-        // having to skip windows that are not visible (see issues with Cmder)
         public void genericApplicationToggler(
             Func<WindowInfo, bool> applicationFinder,
             string APP_IDENTIFIER,
@@ -92,14 +89,13 @@ namespace WindowsFormsApp2
             // why is that?
 
             var hwnd = utils.GetHwndForApplication(applicationFinder, APP_IDENTIFIER);
-            // TODO:
-            // start process if not running
 
             if (hwnd == IntPtr.Zero)
             {
                 if (APP_FILE_PATH == null) return;
                 else {
                     ApplicationUtils.StartApplication(APP_FILE_PATH);
+                    return;
                 }
             }
 
