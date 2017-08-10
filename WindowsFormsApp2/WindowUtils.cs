@@ -30,13 +30,26 @@ namespace WindowsFormsApp2
 
         public WindowInfo GetWindowInfo(IntPtr hwnd)
         {
-            return new WindowInfo
+            // TODO: This is throwing exceptions like crazy
+            try
             {
-                fileName = getFilenameForHwnd(hwnd),
-                isVisible = PInvoke.User32.IsWindowVisible(hwnd),
-                className = PInvoke.User32.GetClassName(hwnd),
-                windowText = PInvoke.User32.GetWindowText(hwnd)
-            };
+                var filename = getFilenameForHwnd(hwnd);
+                var isVisible = PInvoke.User32.IsWindowVisible(hwnd);
+                var className = PInvoke.User32.GetClassName(hwnd);
+                var windowText = PInvoke.User32.GetWindowText(hwnd);
+
+                return new WindowInfo
+                {
+                    fileName = filename,
+                    isVisible = isVisible,
+                    className = className,
+                    windowText = windowText
+                };
+            }
+            catch (Exception e)
+            {
+                var error = PInvoke.Kernel32.GetLastError();
+            }
         }
 
         /// <summary>
