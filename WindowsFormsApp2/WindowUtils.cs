@@ -49,6 +49,13 @@ namespace WindowsFormsApp2
             catch (Exception e)
             {
                 var error = PInvoke.Kernel32.GetLastError();
+                return new WindowInfo
+                {
+                    fileName = "",
+                    isVisible = false,
+                    className = "",
+                    windowText = ""
+                };
             }
         }
 

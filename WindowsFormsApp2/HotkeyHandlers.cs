@@ -79,6 +79,43 @@ namespace WindowsFormsApp2
             "Spotify");
         }
 
+        public void gotoLeftHalfOfScreen(object sender, KeyPressedEventArgs e)
+        {
+            var hwnd = PInvoke.User32.GetForegroundWindow();
+            if (hwnd == null) { return; }
+
+            var currentScreen = Screen.FromHandle(hwnd);
+
+            // use WorkingArea since it will not include the task bar
+            PInvoke.User32.SetWindowPos(
+                hwnd,
+                IntPtr.Zero,
+                currentScreen.WorkingArea.X, currentScreen.WorkingArea.Y,
+                currentScreen.WorkingArea.Width / 2, currentScreen.WorkingArea.Height,
+                0
+            );
+            utils.EnsureCursorWithinWindow(hwnd);
+        }
+
+        public void gotoRightHalfOfScreen(object sender, KeyPressedEventArgs e)
+        {
+            var hwnd = PInvoke.User32.GetForegroundWindow();
+            if (hwnd == null) { return; }
+
+            var currentScreen = Screen.FromHandle(hwnd);
+
+            // use WorkingArea since it will not include the task bar
+            PInvoke.User32.SetWindowPos(
+                hwnd,
+                IntPtr.Zero,
+                (currentScreen.WorkingArea.Width / 2) + currentScreen.WorkingArea.X, 
+                currentScreen.WorkingArea.Y,
+                currentScreen.WorkingArea.Width / 2, currentScreen.WorkingArea.Height,
+                0
+            );
+            utils.EnsureCursorWithinWindow(hwnd);
+        }
+
         public void genericApplicationToggler(
             Func<WindowInfo, bool> applicationFinder,
             string APP_IDENTIFIER,

@@ -15,6 +15,9 @@ namespace WindowsFormsApp2
         KeyboardHook gotoVisualStudioCode = new KeyboardHook();
         KeyboardHook gotoExplorer = new KeyboardHook();
 
+        KeyboardHook gotoLeftHalfOfScreen = new KeyboardHook();
+        KeyboardHook gotoRightHalfOfScreen = new KeyboardHook();
+
         public Form1()
         {
             InitializeComponent();
@@ -75,6 +78,18 @@ namespace WindowsFormsApp2
                 new EventHandler<KeyPressedEventArgs>(handlers.hook_nextWindow_KeyPressed);
             // register the control + alt + F12 combination as hot key.
             sendToNextScreenHook.RegisterHotKey(hyperKey, Keys.E);
+
+            // LEFT HALF OF CURRENT SCREEN
+            gotoLeftHalfOfScreen.KeyPressed +=
+                new EventHandler<KeyPressedEventArgs>(handlers.gotoLeftHalfOfScreen);
+
+            gotoLeftHalfOfScreen.RegisterHotKey(hyperKey, Keys.A);
+
+            // LEFT HALF OF CURRENT SCREEN
+            gotoRightHalfOfScreen.KeyPressed +=
+                new EventHandler<KeyPressedEventArgs>(handlers.gotoRightHalfOfScreen);
+
+            gotoRightHalfOfScreen.RegisterHotKey(hyperKey, Keys.D);
 
         }
 
