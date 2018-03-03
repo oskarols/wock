@@ -25,7 +25,7 @@ namespace WindowsFormsApp2
         {
             genericApplicationToggler((app) =>
             {
-                return app.fileName == "devenv.exe" && 
+                return app.fileName == "devenv.exe" &&
                 // need to do this since Visual Studio has lots of small windows
                 // that have no windowText (which we're not interested in)
                 app.windowText != null;
@@ -47,7 +47,7 @@ namespace WindowsFormsApp2
                 Debug.WriteLine(app.fileName);
                 var hasMatch = app.fileName != null && app.fileName.ToLower() == "chrome.exe";
                 return hasMatch;
-            }, 
+            },
             "chrome.exe",
             @"C:\Program Files(x86)\Google\Chrome\Application\chrome.exe"
             );
@@ -55,15 +55,15 @@ namespace WindowsFormsApp2
 
         public void hook_gotoVisualStudioCode_KeyPressed(object sender, KeyPressedEventArgs e)
         {
-            genericApplicationToggler((app) => app.fileName == "Code.exe", 
+            genericApplicationToggler((app) => app.fileName == "Code.exe",
                 "code.exe",
-                @"C:\Program Files (x86)\Microsoft VS Code\Code.exe");
+                @"C:\Program Files\Microsoft VS Code\Code.exe");
         }
 
         public void hook_gotoExplorer_KeyPressed(object sender, KeyPressedEventArgs e)
         {
             genericApplicationToggler((app) => {
-                return app.fileName != null && 
+                return app.fileName != null &&
                     app.fileName.ToLower() == "explorer.exe" &&
                     // otherwise jumps to e.g. the startmenu and tray as well
                     // RE ExplorerWClass: https://blogs.msdn.microsoft.com/oldnewthing/20150619-00/?p=45341
@@ -75,7 +75,7 @@ namespace WindowsFormsApp2
         {
             genericApplicationToggler((app) => {
                 return app.fileName == "Spotify.exe" && app.className == "SpotifyMainWindow";
-            }, 
+            },
             "Spotify");
         }
 
@@ -108,7 +108,7 @@ namespace WindowsFormsApp2
             PInvoke.User32.SetWindowPos(
                 hwnd,
                 IntPtr.Zero,
-                (currentScreen.WorkingArea.Width / 2) + currentScreen.WorkingArea.X, 
+                (currentScreen.WorkingArea.Width / 2) + currentScreen.WorkingArea.X,
                 currentScreen.WorkingArea.Y,
                 currentScreen.WorkingArea.Width / 2, currentScreen.WorkingArea.Height,
                 0
